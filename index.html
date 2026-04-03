@@ -24,12 +24,19 @@
         }
         .tab-btn { flex: 1; padding: 12px; border: none; border-radius: 9px; font-family: 'DM Mono', monospace; font-size: 13px; cursor: pointer; }
         .metric-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 20px; margin-bottom: 16px; }
-        .save-btn { width: 100%; padding: 16px; border: none; border-radius: 12px; color: white; font-family: 'Playfair Display', serif; font-size: 18px; font-weight: bold; }
-        input[type=date], textarea { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px; color: #e2e8f0; font-family: 'DM Mono', monospace; font-size: 16px; }
-        .field-label { font-size: 11px; color: rgba(255,255,255,0.4); font-family: 'DM Mono', monospace; margin-bottom: 6px; text-transform: uppercase; }
-        .history-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 14px; margin-bottom: 10px; overflow: hidden; }
+        .save-btn { width: 100%; padding: 18px; border: none; border-radius: 14px; color: white; font-family: 'Playfair Display', serif; font-size: 19px; font-weight: bold; margin-top: 20px; }
+        input[type=date], textarea { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px; color: #e2e8f0; font-family: 'DM Mono', monospace; font-size: 16px; outline: none; }
+        .field-label { font-size: 11px; color: rgba(255,255,255,0.4); font-family: 'DM Mono', monospace; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
+        
+        /* History Styles */
+        .history-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 14px; margin-bottom: 12px; overflow: hidden; }
         .history-header { width: 100%; background: none; border: none; padding: 16px; display: flex; align-items: center; justify-content: space-between; color: inherit; }
+        .history-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .history-metric-item { background: rgba(255,255,255,0.03); padding: 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); }
+        
         .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+        .unit-badge { background: rgba(99,102,241,0.2); color: #a5b4fc; padding: 4px 8px; border-radius: 6px; font-family: 'DM Mono', monospace; font-size: 12px; }
+        .quick-btn { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 12px; font-family: 'DM Mono', monospace; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -44,7 +51,7 @@ const METRICS = [
 ];
 
 const todayStr = () => new Date().toISOString().split('T')[0];
-const defaultValues = () => ({ drunkenness:0, embarrassment:0, hangover:0, mental:0, drinks:"", incidents:"", note:"", date:todayStr() });
+const defaultValues = () => ({ drunkenness:0, embarrassment:0, hangover:0, mental:0, drinks:"", incidents:"", note:"", date:todayStr(), units: 0 });
 
 let state = {
   tab: "survey",
@@ -77,13 +84,11 @@ function render() {
   const root = document.getElementById("app");
   root.innerHTML = "";
   
-  // Header
   root.appendChild(el("div", {style:{textAlign:"center", padding:"20px 0"}},
     el("div", {style:{fontSize:"32px"}}, "🥃"),
     el("h1", {className:"page-title"}, "The Drinking Diary")
   ));
 
-  // Tabs
   const tabs = el("div", {style:{display:"flex", background:"rgba(255,255,255,0.05)", borderRadius:"12px", padding:"4px", marginBottom:"24px"}},
     ["survey", "history"].map(t => el("button", {
       className: "tab-btn",
@@ -93,11 +98,7 @@ function render() {
   );
   root.appendChild(tabs);
 
-  if (state.tab === "survey") {
-    root.appendChild(Survey());
-  } else {
-    root.appendChild(History());
-  }
+  root.appendChild(state.tab === "survey" ? Survey() : History());
 }
 
 function Survey() {
@@ -113,7 +114,7 @@ function Survey() {
   METRICS.forEach(m => {
     const val = state.values[m.id];
     const color = m.colors[val];
-    const card = el("div", {className:"metric-card", style:{borderLeft:`4px solid ${color}`}},
+    container.appendChild(el("div", {className:"metric-card", style:{borderLeft:`4px solid ${color}`}},
       el("div", {style:{display:"flex", justifyContent:"space-between", marginBottom:"15px"}},
         el("span", {}, `${m.emoji} ${m.label}`),
         el("span", {style:{color:color, fontWeight:"bold"}}, m.levels[val])
@@ -123,26 +124,39 @@ function Survey() {
         style:{width:"100%", accentColor:color},
         oninput: e => { state.values[m.id] = parseInt(e.target.value); render(); }
       })
-    );
-    container.appendChild(card);
-  });
-
-  // Text areas
-  const fields = [
-    {id:"drinks", label:"🍷 Drinks Log", placeholder:"What did you have?"},
-    {id:"incidents", label:"😳 Incidents", placeholder:"Anything regrettable?"}
-  ];
-  
-  fields.forEach(f => {
-    container.appendChild(el("div", {style:{marginBottom:"16px"}},
-      el("div", {className:"field-label"}, f.label),
-      el("textarea", {
-        placeholder: f.placeholder, 
-        value: state.values[f.id],
-        oninput: e => state.values[f.id] = e.target.value
-      })
     ));
   });
+
+  // Units Calculator & Drinks Log
+  const unitBox = el("div", {style:{marginBottom:"20px", padding:"16px", background:"rgba(99,102,241,0.05)", borderRadius:"12px", border:"1px solid rgba(99,102,241,0.1)"}},
+    el("div", {style:{display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"12px"}},
+        el("div", {className:"field-label", style:{marginBottom:0}}, "🍷 Unit Estimator"),
+        el("div", {className:"unit-badge"}, `${state.values.units.toFixed(1)} Units`)
+    ),
+    el("div", {style:{display:"flex", gap:"8px", flexWrap:"wrap", marginBottom:"15px"}},
+        el("button", {className:"quick-btn", onclick: () => { state.values.units += 2.3; render(); }}, "+ Pint (4%)"),
+        el("button", {className:"quick-btn", onclick: () => { state.values.units += 2.1; render(); }}, "+ Wine (175ml)"),
+        el("button", {className:"quick-btn", onclick: () => { state.values.units += 1.0; render(); }}, "+ Shot (25ml)"),
+        el("button", {className:"quick-btn", style:{color:"#f87171"}, onclick: () => { state.values.units = 0; render(); }}, "Clear")
+    ),
+    el("textarea", {
+        placeholder: "Detail your drinks here...", 
+        value: state.values.drinks,
+        rows: 3,
+        oninput: e => state.values.drinks = e.target.value
+      })
+  );
+  container.appendChild(unitBox);
+
+  // Incidents
+  container.appendChild(el("div", {style:{marginBottom:"16px"}},
+    el("div", {className:"field-label"}, "😳 Incidents"),
+    el("textarea", {
+      placeholder: "Anything regrettable?", 
+      value: state.values.incidents,
+      oninput: e => state.values.incidents = e.target.value
+    })
+  ));
 
   // Save Button
   container.appendChild(el("button", {
@@ -161,7 +175,7 @@ function Survey() {
 }
 
 function History() {
-  if (state.history.length === 0) return el("div", {style:{textAlign:"center", padding:"40px"}}, "No logs yet.");
+  if (state.history.length === 0) return el("div", {style:{textAlign:"center", padding:"40px", color:"#666"}}, "No logs yet.");
   
   const container = el("div");
   state.history.forEach(entry => {
@@ -169,26 +183,52 @@ function History() {
     const card = el("div", {className:"history-card"},
       el("button", {className:"history-header", onclick: () => setState({expandedId: isExpanded ? null : entry.id})},
         el("div", {style:{textAlign:"left"}}, 
-           el("div", {style:{fontSize:"14px"}}, entry.date)
+           el("div", {style:{fontSize:"15px", fontWeight:"bold", color:"#fff"}}, entry.date),
+           el("div", {style:{fontSize:"12px", color:"#818cf8", marginTop:"2px"}}, `${(entry.units || 0).toFixed(1)} Units`)
         ),
-        el("div", {style:{display:"flex", gap:"4px"}}, 
-          METRICS.map(m => el("div", {className:"dot", style:{background:m.colors[entry[m.id]]}}))
+        el("div", {style:{display:"flex", gap:"6px", alignItems:"center"}}, 
+          METRICS.map(m => el("div", {className:"dot", style:{background:m.colors[entry[m.id]], boxShadow: `0 0 5px ${m.colors[entry[m.id]]}88`}})),
+          el("span", {style:{color:"#444", marginLeft:"4px"}}, isExpanded ? "▲" : "▼")
         )
       )
     );
+    
     if (isExpanded) {
-        const detail = el("div", {style:{padding:"15px", borderTop:"1px solid rgba(255,255,255,0.1)", fontSize:"14px"}},
-            el("div", {style:{marginBottom:"10px", color:"#c4b5fd"}}, entry.drinks || "No drink log"),
+        const detailBody = el("div", {style:{padding:"0 16px 16px", background:"rgba(0,0,0,0.2)", fontSize:"14px"}},
+            // Metrics Grid
+            el("div", {className: "history-grid"},
+                METRICS.map(m => {
+                    const levelIdx = entry[m.id] || 0;
+                    return el("div", {className: "history-metric-item"},
+                        el("div", {style:{fontSize:"10px", color:"rgba(255,255,255,0.3)", textTransform:"uppercase", marginBottom:"4px"}}, m.label),
+                        el("div", {style:{color: m.colors[levelIdx], fontWeight:"600"}}, `${m.emoji} ${m.levels[levelIdx]}`)
+                    );
+                })
+            ),
+            // Drinks Detail
+            el("div", {style:{marginBottom:"12px", color:"#c4b5fd", whiteSpace:"pre-wrap", background:"rgba(99,102,241,0.05)", padding:"10px", borderRadius:"8px", borderLeft:"2px solid #6366f1"}}, 
+                el("div", {style:{fontSize:"10px", color:"#818cf8", marginBottom:"4px"}}, "DRINKS LOG"),
+                entry.drinks || "No detail added"
+            ),
+            // Incidents Detail
+            entry.incidents ? el("div", {style:{marginBottom:"12px", color:"#fca5a5", background:"rgba(239,68,68,0.05)", padding:"10px", borderRadius:"8px", borderLeft:"2px solid #ef4444"}}, 
+                el("div", {style:{fontSize:"10px", color:"#ef4444", marginBottom:"4px"}}, "INCIDENTS"),
+                entry.incidents
+            ) : null,
+            // Delete
             el("button", {
-                style:{color:"#f87171", background:"none", border:"none", fontSize:"12px"},
-                onclick: () => {
-                    const filtered = state.history.filter(h => h.id !== entry.id);
-                    localStorage.setItem("drinking_diary_v2", JSON.stringify(filtered));
-                    setState({history: filtered});
+                style:{color:"#ef4444", background:"rgba(239,68,68,0.1)", border:"none", fontSize:"10px", padding:"6px 12px", borderRadius:"6px", textTransform:"uppercase", letterSpacing:"1px", marginTop:"10px", width:"100%"},
+                onclick: (e) => {
+                    e.stopPropagation();
+                    if(confirm("Delete this entry?")) {
+                        const filtered = state.history.filter(h => h.id !== entry.id);
+                        localStorage.setItem("drinking_diary_v2", JSON.stringify(filtered));
+                        setState({history: filtered});
+                    }
                 }
             }, "Delete Entry")
         );
-        card.appendChild(detail);
+        card.appendChild(detailBody);
     }
     container.appendChild(card);
   });
