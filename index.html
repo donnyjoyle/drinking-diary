@@ -1,3 +1,10 @@
+Update
+Inbox
+
+Jonny Doyle <jonny.m.doyle@gmail.com>
+12:34 (0 minutes ago)
+to me
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -36,7 +43,7 @@
         
         .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
         .unit-badge { background: rgba(99,102,241,0.2); color: #a5b4fc; padding: 4px 8px; border-radius: 6px; font-family: 'DM Mono', monospace; font-size: 12px; }
-        .quick-btn { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 12px; font-family: 'DM Mono', monospace; cursor: pointer; }
+        .quick-btn { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 8px 10px; border-radius: 8px; font-size: 11px; font-family: 'DM Mono', monospace; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -133,14 +140,15 @@ function Survey() {
         el("div", {className:"field-label", style:{marginBottom:0}}, "🍷 Unit Estimator"),
         el("div", {className:"unit-badge"}, `${state.values.units.toFixed(1)} Units`)
     ),
-    el("div", {style:{display:"flex", gap:"8px", flexWrap:"wrap", marginBottom:"15px"}},
-        el("button", {className:"quick-btn", onclick: () => { state.values.units += 2.3; render(); }}, "+ Pint (4%)"),
-        el("button", {className:"quick-btn", onclick: () => { state.values.units += 2.1; render(); }}, "+ Wine (175ml)"),
-        el("button", {className:"quick-btn", onclick: () => { state.values.units += 1.0; render(); }}, "+ Shot (25ml)"),
-        el("button", {className:"quick-btn", style:{color:"#f87171"}, onclick: () => { state.values.units = 0; render(); }}, "Clear")
+    el("div", {style:{display:"flex", gap:"6px", flexWrap:"wrap", marginBottom:"15px"}},
+        el("button", {className:"quick-btn", onclick: () => { state.values.units += 1.0; render(); }}, "+ Shot"),
+        el("button", {className:"quick-btn", onclick: () => { state.values.units += 2.1; render(); }}, "+ Wine"),
+        el("button", {className:"quick-btn", onclick: () => { state.values.units += 2.3; render(); }}, "+ Pint 4%"),
+        el("button", {className:"quick-btn", onclick: () => { state.values.units += 2.8; render(); }}, "+ Pint 5%"),
+        el("button", {className:"quick-btn", style:{color:"#f87171", background:"rgba(239,68,68,0.1)"}, onclick: () => { state.values.units = 0; render(); }}, "Reset")
     ),
     el("textarea", {
-        placeholder: "Detail your drinks here...", 
+        placeholder: "What did you drink?", 
         value: state.values.drinks,
         rows: 3,
         oninput: e => state.values.drinks = e.target.value
@@ -195,7 +203,6 @@ function History() {
     
     if (isExpanded) {
         const detailBody = el("div", {style:{padding:"0 16px 16px", background:"rgba(0,0,0,0.2)", fontSize:"14px"}},
-            // Metrics Grid
             el("div", {className: "history-grid"},
                 METRICS.map(m => {
                     const levelIdx = entry[m.id] || 0;
@@ -205,17 +212,14 @@ function History() {
                     );
                 })
             ),
-            // Drinks Detail
             el("div", {style:{marginBottom:"12px", color:"#c4b5fd", whiteSpace:"pre-wrap", background:"rgba(99,102,241,0.05)", padding:"10px", borderRadius:"8px", borderLeft:"2px solid #6366f1"}}, 
                 el("div", {style:{fontSize:"10px", color:"#818cf8", marginBottom:"4px"}}, "DRINKS LOG"),
                 entry.drinks || "No detail added"
             ),
-            // Incidents Detail
             entry.incidents ? el("div", {style:{marginBottom:"12px", color:"#fca5a5", background:"rgba(239,68,68,0.05)", padding:"10px", borderRadius:"8px", borderLeft:"2px solid #ef4444"}}, 
                 el("div", {style:{fontSize:"10px", color:"#ef4444", marginBottom:"4px"}}, "INCIDENTS"),
                 entry.incidents
             ) : null,
-            // Delete
             el("button", {
                 style:{color:"#ef4444", background:"rgba(239,68,68,0.1)", border:"none", fontSize:"10px", padding:"6px 12px", borderRadius:"6px", textTransform:"uppercase", letterSpacing:"1px", marginTop:"10px", width:"100%"},
                 onclick: (e) => {
