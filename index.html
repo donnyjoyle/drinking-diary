@@ -1,10 +1,3 @@
-Update
-Inbox
-
-Jonny Doyle <jonny.m.doyle@gmail.com>
-12:34 (0 minutes ago)
-to me
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -35,7 +28,6 @@ to me
         input[type=date], textarea { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px; color: #e2e8f0; font-family: 'DM Mono', monospace; font-size: 16px; outline: none; }
         .field-label { font-size: 11px; color: rgba(255,255,255,0.4); font-family: 'DM Mono', monospace; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
         
-        /* History Styles */
         .history-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 14px; margin-bottom: 12px; overflow: hidden; }
         .history-header { width: 100%; background: none; border: none; padding: 16px; display: flex; align-items: center; justify-content: space-between; color: inherit; }
         .history-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
@@ -44,48 +36,15 @@ to me
         .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
         .unit-badge { background: rgba(99,102,241,0.2); color: #a5b4fc; padding: 4px 8px; border-radius: 6px; font-family: 'DM Mono', monospace; font-size: 12px; }
         .quick-btn { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 8px 10px; border-radius: 8px; font-size: 11px; font-family: 'DM Mono', monospace; cursor: pointer; }
-    </style>
-</head>
-<body>
-    <div id="app"></div>
-
-<script>
-const METRICS = [
-  { id:"drunkenness",  label:"Drunkenness",   emoji:"🍺", levels:["Low","Moderate","High","V. High"], colors:["#4ade80","#facc15","#fb923c","#ef4444"] },
-  { id:"embarrassment",label:"Embarrassment", emoji:"😳", levels:["None","Modest","Quite","Very"], colors:["#4ade80","#facc15","#fb923c","#ef4444"] },
-  { id:"hangover",     label:"Hangover",      emoji:"🤕", levels:["None","Slight","Quite","Very"], colors:["#4ade80","#facc15","#fb923c","#ef4444"] },
-  { id:"mental",       label:"Mental State",  emoji:"🧠", levels:["Fine","Low","Not Great","Depressed"], colors:["#4ade80","#a3e635","#fb923c","#8b5cf6"] }
-];
-
-const todayStr = () => new Date().toISOString().split('T')[0];
-const defaultValues = () => ({ drunkenness:0, embarrassment:0, hangover:0, mental:0, drinks:"", incidents:"", note:"", date:todayStr(), units: 0 });
-
-let state = {
-  tab: "survey",
-  values: defaultValues(),
-  history: JSON.parse(localStorage.getItem("drinking_diary_v2") || "[]"),
-  saved: false,
-  expandedId: null
-};
-
-function el(tag, attrs, ...children) {
-  const e = document.createElement(tag);
-  if (attrs) {
-    Object.keys(attrs).forEach(k => {
-      if (k === "style" && typeof attrs[k] === "object") Object.assign(e.style, attrs[k]);
-      else if (k === "className") e.className = attrs[k];
-      else if (k.startsWith("on")) e.addEventListener(k.toLowerCase().substring(2), attrs[k]);
-      else e[k] = attrs[k];
-    });
-  }
-  children.flat().forEach(child => {
-    if (child == null) return;
-    e.appendChild(typeof child === "string" ? document.createTextNode(child) : child);
-  });
-  return e;
+// New helper to handle drink additions
+function addDrink(name, units) {
+    state.values.units += units;
+    const currentText = state.values.drinks.trim();
+    // Add comma if there's already text
+    const separator = currentText.length > 0 ? ", " : "";
+    state.values.drinks = currentText + separator + name;
+    render();
 }
-
-const setState = (patch) => { Object.assign(state, patch); render(); };
 
 function render() {
   const root = document.getElementById("app");
@@ -111,13 +70,11 @@ function render() {
 function Survey() {
   const container = el("div");
 
-  // Date
   container.appendChild(el("div", {style:{marginBottom:"20px"}},
     el("div", {className:"field-label"}, "Session Date"),
     el("input", {type:"date", value:state.values.date, onchange: e => state.values.date = e.target.value})
   ));
 
-  // Metrics
   METRICS.forEach(m => {
     const val = state.values[m.id];
     const color = m.colors[val];
@@ -134,21 +91,20 @@ function Survey() {
     ));
   });
 
-  // Units Calculator & Drinks Log
   const unitBox = el("div", {style:{marginBottom:"20px", padding:"16px", background:"rgba(99,102,241,0.05)", borderRadius:"12px", border:"1px solid rgba(99,102,241,0.1)"}},
     el("div", {style:{display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"12px"}},
         el("div", {className:"field-label", style:{marginBottom:0}}, "🍷 Unit Estimator"),
         el("div", {className:"unit-badge"}, `${state.values.units.toFixed(1)} Units`)
     ),
     el("div", {style:{display:"flex", gap:"6px", flexWrap:"wrap", marginBottom:"15px"}},
-        el("button", {className:"quick-btn", onclick: () => { state.values.units += 1.0; render(); }}, "+ Shot"),
-        el("button", {className:"quick-btn", onclick: () => { state.values.units += 2.1; render(); }}, "+ Wine"),
-        el("button", {className:"quick-btn", onclick: () => { state.values.units += 2.3; render(); }}, "+ Pint 4%"),
-        el("button", {className:"quick-btn", onclick: () => { state.values.units += 2.8; render(); }}, "+ Pint 5%"),
-        el("button", {className:"quick-btn", style:{color:"#f87171", background:"rgba(239,68,68,0.1)"}, onclick: () => { state.values.units = 0; render(); }}, "Reset")
+        el("button", {className:"quick-btn", onclick: () => addDrink("Shot", 1.0)}, "+ Shot"),
+        el("button", {className:"quick-btn", onclick: () => addDrink("Wine", 2.1)}, "+ Wine"),
+        el("button", {className:"quick-btn", onclick: () => addDrink("Pint 4%", 2.3)}, "+ Pint 4%"),
+        el("button", {className:"quick-btn", onclick: () => addDrink("Pint 5%", 2.8)}, "+ Pint 5%"),
+        el("button", {className:"quick-btn", style:{color:"#f87171", background:"rgba(239,68,68,0.1)"}, onclick: () => { state.values.units = 0; state.values.drinks = ""; render(); }}, "Reset")
     ),
     el("textarea", {
-        placeholder: "What did you drink?", 
+        placeholder: "Detail your drinks here...", 
         value: state.values.drinks,
         rows: 3,
         oninput: e => state.values.drinks = e.target.value
@@ -156,7 +112,6 @@ function Survey() {
   );
   container.appendChild(unitBox);
 
-  // Incidents
   container.appendChild(el("div", {style:{marginBottom:"16px"}},
     el("div", {className:"field-label"}, "😳 Incidents"),
     el("textarea", {
@@ -166,43 +121,6 @@ function Survey() {
     })
   ));
 
-  // Save Button
-  container.appendChild(el("button", {
-    className: "save-btn",
-    style: { background: state.saved ? "#22c55e" : "linear-gradient(135deg,#6366f1,#8b5cf6)" },
-    onclick: () => {
-      const entry = {...state.values, id: Date.now()};
-      const newHistory = [entry, ...state.history];
-      localStorage.setItem("drinking_diary_v2", JSON.stringify(newHistory));
-      setState({history: newHistory, saved: true, values: defaultValues()});
-      setTimeout(() => setState({saved: false, tab: "history"}), 1000);
-    }
-  }, state.saved ? "✓ Saved!" : "Save Session"));
-
-  return container;
-}
-
-function History() {
-  if (state.history.length === 0) return el("div", {style:{textAlign:"center", padding:"40px", color:"#666"}}, "No logs yet.");
-  
-  const container = el("div");
-  state.history.forEach(entry => {
-    const isExpanded = state.expandedId === entry.id;
-    const card = el("div", {className:"history-card"},
-      el("button", {className:"history-header", onclick: () => setState({expandedId: isExpanded ? null : entry.id})},
-        el("div", {style:{textAlign:"left"}}, 
-           el("div", {style:{fontSize:"15px", fontWeight:"bold", color:"#fff"}}, entry.date),
-           el("div", {style:{fontSize:"12px", color:"#818cf8", marginTop:"2px"}}, `${(entry.units || 0).toFixed(1)} Units`)
-        ),
-        el("div", {style:{display:"flex", gap:"6px", alignItems:"center"}}, 
-          METRICS.map(m => el("div", {className:"dot", style:{background:m.colors[entry[m.id]], boxShadow: `0 0 5px ${m.colors[entry[m.id]]}88`}})),
-          el("span", {style:{color:"#444", marginLeft:"4px"}}, isExpanded ? "▲" : "▼")
-        )
-      )
-    );
-    
-    if (isExpanded) {
-        const detailBody = el("div", {style:{padding:"0 16px 16px", background:"rgba(0,0,0,0.2)", fontSize:"14px"}},
             el("div", {className: "history-grid"},
                 METRICS.map(m => {
                     const levelIdx = entry[m.id] || 0;
@@ -243,4 +161,3 @@ render();
 </script>
 </body>
 </html>
-
