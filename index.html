@@ -7,7 +7,6 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Drinking Diary</title>
     <style>
-        /* Essential Reset */
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             background-color: #0a0d14;
@@ -18,62 +17,80 @@
         }
         #app { max-width: 480px; margin: 0 auto; }
         
-        /* UI Elements */
         .header { text-align: center; margin-bottom: 20px; }
-        .title { font-size: 24px; margin-top: 10px; color: #fff; }
+        .title { font-size: 24px; margin-top: 10px; color: #fff; font-weight: bold; }
         
         .tabs { display: flex; background: rgba(255,255,255,0.05); border-radius: 12px; padding: 4px; margin-bottom: 20px; }
-        .tab-btn { flex: 1; padding: 12px; border: none; background: transparent; color: #666; border-radius: 8px; cursor: pointer; }
+        .tab-btn { flex: 1; padding: 12px; border: none; background: transparent; color: #666; border-radius: 8px; font-size: 14px; }
         .tab-btn.active { background: rgba(255,255,255,0.1); color: #fff; }
 
-        .card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 15px; margin-bottom: 15px; }
-        .label { font-size: 11px; color: rgba(255,255,255,0.4); text-transform: uppercase; margin-bottom: 8px; display: block; }
+        .card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 18px; margin-bottom: 15px; }
+        .label-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .label { font-size: 11px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1px; }
+        .val-badge { font-size: 12px; font-weight: bold; padding: 2px 8px; border-radius: 4px; }
         
-        input[type=range] { width: 100%; margin: 10px 0; }
+        input[type=range] { width: 100%; height: 30px; accent-color: #818cf8; }
         textarea, input[type=date] { 
             width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); 
-            border-radius: 8px; padding: 12px; color: #fff; font-size: 16px; outline: none;
+            border-radius: 8px; padding: 12px; color: #fff; font-size: 16px; outline: none; margin-top: 5px;
         }
 
-        .quick-row { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; }
-        .btn-small { background: rgba(255,255,255,0.1); border: none; color: #fff; padding: 8px; border-radius: 6px; font-size: 12px; flex: 1; }
+        .quick-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+        .btn-small { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 10px; border-radius: 8px; font-size: 12px; flex: 1; min-width: 70px; }
         
         .save-btn { 
             width: 100%; padding: 18px; border: none; border-radius: 14px; 
             background: linear-gradient(135deg,#6366f1,#8b5cf6); color: white; 
-            font-size: 18px; font-weight: bold; margin-top: 10px;
+            font-size: 18px; font-weight: bold; margin-top: 10px; box-shadow: 0 4px 15px rgba(99,102,241,0.3);
         }
 
-        .history-item { background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.05); }
-        .unit-display { color: #818cf8; font-weight: bold; }
+        .history-item { background: rgba(255,255,255,0.03); padding: 16px; border-radius: 14px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.05); }
+        .h-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 10px; }
+        .h-m-item { font-size: 11px; color: #aaa; }
     </style>
 </head>
 <body>
 
-<div id="app">Loading...</div>
+<div id="app">Loading Diary...</div>
 
 <script>
-// --- DATA & STATE ---
-var historyData = JSON.parse(localStorage.getItem('diary_v3') || '[]');
-var currentTab = 'log'; // 'log' or 'history'
+// --- CONFIGURATION ---
+var SCALES = {
+    drunkenness:  { label: "Drunkenness",  levels: ["Low", "Moderate", "High", "Very High"], colors: ["#4ade80", "#facc15", "#fb923c", "#ef4444"] },
+    embarrassment: { label: "Embarrassment", levels: ["None", "Modest", "Quite", "Very"], colors: ["#4ade80", "#facc15", "#fb923c", "#ef4444"] },
+    hangover:     { label: "Hangover",      levels: ["None", "Slight", "Quite", "Very"], colors: ["#4ade80", "#facc15", "#fb923c", "#ef4444"] },
+    mental:       { label: "Mental State",  levels: ["Fine", "A Bit Low", "Not Great", "Depressed"], colors: ["#4ade80", "#a3e635", "#fb923c", "#8b5cf6"] }
+};
+
+// --- STATE ---
+var historyData = JSON.parse(localStorage.getItem('diary_v4') || '[]');
+var currentTab = 'log'; 
 var formData = {
     date: new Date().toISOString().split('T')[0],
     drunkenness: 0,
+    embarrassment: 0,
     hangover: 0,
+    mental: 0,
     units: 0,
     drinks: '',
     incidents: ''
 };
 
-// --- FUNCTIONS ---
+// --- LOGIC ---
 function saveEntry() {
-    historyData.unshift(JSON.parse(JSON.stringify(formData)));
-    localStorage.setItem('diary_v3', JSON.stringify(historyData));
+    var entry = JSON.parse(JSON.stringify(formData));
+    entry.id = Date.now();
+    historyData.unshift(entry);
+    localStorage.setItem('diary_v4', JSON.stringify(historyData));
     
-    // Reset form
+    // Reset
     formData.units = 0;
     formData.drinks = '';
     formData.incidents = '';
+    formData.drunkenness = 0;
+    formData.embarrassment = 0;
+    formData.hangover = 0;
+    formData.mental = 0;
     
     currentTab = 'history';
     render();
@@ -81,15 +98,15 @@ function saveEntry() {
 
 function addDrink(name, unitValue) {
     formData.units += unitValue;
-    var sep = formData.drinks.length > 0 ? ", " : "";
+    var sep = formData.drinks.trim().length > 0 ? ", " : "";
     formData.drinks += sep + name;
     render();
 }
 
-function deleteEntry(index) {
-    if(confirm("Delete this?")) {
-        historyData.splice(index, 1);
-        localStorage.setItem('diary_v3', JSON.stringify(historyData));
+function deleteEntry(id) {
+    if(confirm("Delete this session?")) {
+        historyData = historyData.filter(function(item) { return item.id !== id; });
+        localStorage.setItem('diary_v4', JSON.stringify(historyData));
         render();
     }
 }
@@ -99,72 +116,75 @@ function render() {
     var app = document.getElementById('app');
     var html = '';
 
-    // Header
     html += '<div class="header"><div>🥃</div><div class="title">The Drinking Diary</div></div>';
-
-    // Tabs
     html += '<div class="tabs">';
     html += '<button class="tab-btn '+(currentTab=='log'?'active':'')+'" onclick="currentTab=\'log\';render()">📝 Log</button>';
     html += '<button class="tab-btn '+(currentTab=='history'?'active':'')+'" onclick="currentTab=\'history\';render()">📅 History ('+historyData.length+')</button>';
     html += '</div>';
 
     if (currentTab == 'log') {
-        html += '<div class="card">';
-        html += '<span class="label">Date</span>';
-        html += '<input type="date" value="'+formData.date+'" onchange="formData.date=this.value">';
-        html += '</div>';
+        html += '<div class="card"><span class="label">Session Date</span><input type="date" value="'+formData.date+'" onchange="formData.date=this.value"></div>';
 
-        // Sliders
-        html += '<div class="card">';
-        html += '<span class="label">Drunkenness: '+formData.drunkenness+'</span>';
-        html += '<input type="range" min="0" max="3" value="'+formData.drunkenness+'" oninput="formData.drunkenness=parseInt(this.value);render()">';
-        html += '</div>';
+        // Render 4 Sliders
+        var keys = ['drunkenness', 'embarrassment', 'hangover', 'mental'];
+        for (var i = 0; i < keys.length; i++) {
+            var k = keys[i];
+            var scale = SCALES[k];
+            var val = formData[k];
+            html += '<div class="card">';
+            html += '<div class="label-row"><span class="label">'+scale.label+'</span>';
+            html += '<span class="val-badge" style="background:'+scale.colors[val]+'22; color:'+scale.colors[val]+'">'+scale.levels[val]+'</span></div>';
+            html += '<input type="range" min="0" max="3" value="'+val+'" oninput="formData.'+k+'=parseInt(this.value);render()">';
+            html += '</div>';
+        }
 
-        html += '<div class="card">';
-        html += '<span class="label">Hangover: '+formData.hangover+'</span>';
-        html += '<input type="range" min="0" max="3" value="'+formData.hangover+'" oninput="formData.hangover=parseInt(this.value);render()">';
+        // Drinks & Units
+        html += '<div class="card" style="border: 1px solid #6366f144; background: rgba(99,102,241,0.03)">';
+        html += '<div style="display:flex; justify-content:space-between; margin-bottom:12px;">';
+        html += '<span class="label">Units & Drinks</span><span style="color:#818cf8; font-weight:bold;">'+formData.units.toFixed(1)+' Units</span>';
         html += '</div>';
-
-        // Units
-        html += '<div class="card" style="border: 1px solid #6366f166">';
-        html += '<div style="display:flex; justify-content:space-between; margin-bottom:10px;">';
-        html += '<span class="label">Units & Drinks</span>';
-        html += '<span class="unit-display">'+formData.units.toFixed(1)+' Units</span>';
-        html += '</div>';
-        
         html += '<div class="quick-row">';
         html += '<button class="btn-small" onclick="addDrink(\'Shot\', 1)">+ Shot</button>';
         html += '<button class="btn-small" onclick="addDrink(\'Wine\', 2.1)">+ Wine</button>';
-        html += '<button class="btn-small" onclick="addDrink(\'Pint 4%\', 2.3)">+ Pt 4%</button>';
-        html += '<button class="btn-small" onclick="addDrink(\'Pint 5%\', 2.8)">+ Pt 5%</button>';
+        html += '<button class="btn-small" onclick="addDrink(\'Pt 4%\', 2.3)">+ Pt 4%</button>';
+        html += '<button class="btn-small" onclick="addDrink(\'Pt 5%\', 2.8)">+ Pt 5%</button>';
+        html += '<button class="btn-small" style="color:#f87171" onclick="formData.units=0;formData.drinks=\'\';render()">Reset</button>';
         html += '</div>';
-
-        html += '<textarea rows="3" placeholder="Click buttons or type here..." oninput="formData.drinks=this.value">'+formData.drinks+'</textarea>';
+        html += '<textarea rows="3" placeholder="Click buttons or type details..." oninput="formData.drinks=this.value">'+formData.drinks+'</textarea>';
         html += '</div>';
 
         // Incidents
         html += '<div class="card">';
-        html += '<span class="label">Incidents</span>';
-        html += '<textarea rows="2" oninput="formData.incidents=this.value">'+formData.incidents+'</textarea>';
+        html += '<span class="label">Record Incidents</span>';
+        html += '<textarea rows="2" placeholder="Describe any events..." oninput="formData.incidents=this.value">'+formData.incidents+'</textarea>';
         html += '</div>';
 
         html += '<button class="save-btn" onclick="saveEntry()">Save Session</button>';
 
     } else {
-        // History List
         if (historyData.length == 0) {
-            html += '<div style="text-align:center; padding:40px; color:#666;">No logs yet.</div>';
+            html += '<div style="text-align:center; padding:60px 20px; color:#666;">No sessions recorded.</div>';
         } else {
-            for (var i = 0; i < historyData.length; i++) {
-                var item = historyData[i];
+            for (var j = 0; j < historyData.length; j++) {
+                var item = historyData[j];
                 html += '<div class="history-item">';
-                html += '<div style="display:flex; justify-content:space-between; margin-bottom:8px;">';
-                html += '<strong>'+item.date+'</strong>';
-                html += '<span class="unit-display">'+(item.units ? item.units.toFixed(1) : 0)+' Units</span>';
+                html += '<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">';
+                html += '<div><div style="font-weight:bold; color:#fff;">'+item.date+'</div>';
+                html += '<div style="font-size:12px; color:#818cf8;">'+(item.units ? item.units.toFixed(1) : 0)+' Units</div></div>';
+                html += '<button style="background:none; border:none; color:#ef4444; font-size:10px; text-decoration:underline;" onclick="deleteEntry('+item.id+')">Delete</button>';
                 html += '</div>';
-                html += '<div style="font-size:13px; color:#aaa; margin-bottom:8px;">'+item.drinks+'</div>';
-                if(item.incidents) html += '<div style="font-size:13px; color:#fca5a5;">⚠️ '+item.incidents+'</div>';
-                html += '<button style="background:none; border:none; color:#ef4444; font-size:10px; margin-top:10px; text-decoration:underline;" onclick="deleteEntry('+i+')">Delete</button>';
+                
+                if(item.drinks) html += '<div style="font-size:13px; color:#ccc; margin-bottom:8px;">'+item.drinks+'</div>';
+                if(item.incidents) html += '<div style="font-size:13px; color:#fca5a5; background:rgba(239,68,68,0.1); padding:8px; border-radius:6px;">⚠️ '+item.incidents+'</div>';
+                
+                // Detailed Metrics in History
+                html += '<div class="h-metrics">';
+                html += '<div class="h-m-item">Drunk: <span style="color:'+SCALES.drunkenness.colors[item.drunkenness]+'">'+SCALES.drunkenness.levels[item.drunkenness]+'</span></div>';
+                html += '<div class="h-m-item">Hangover: <span style="color:'+SCALES.hangover.colors[item.hangover]+'">'+SCALES.hangover.levels[item.hangover]+'</span></div>';
+                html += '<div class="h-m-item">Mental: <span style="color:'+SCALES.mental.colors[item.mental]+'">'+SCALES.mental.levels[item.mental]+'</span></div>';
+                html += '<div class="h-m-item">Embarrass: <span style="color:'+SCALES.embarrassment.colors[item.embarrassment]+'">'+SCALES.embarrassment.levels[item.embarrassment]+'</span></div>';
+                html += '</div>';
+                
                 html += '</div>';
             }
         }
@@ -173,7 +193,6 @@ function render() {
     app.innerHTML = html;
 }
 
-// Start
 render();
 </script>
 
