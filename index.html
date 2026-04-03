@@ -15,6 +15,7 @@
                               radial-gradient(ellipse at 80% 20%, #0d1a2e 0%, transparent 60%);
             min-height: 100vh; color: #e2e8f0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             padding-top: env(safe-area-inset-top);
+            overflow-x: hidden;
         }
         #app { max-width: 480px; margin: 0 auto; padding: 20px 16px 100px; }
         .page-title {
@@ -22,63 +23,120 @@
             background: linear-gradient(135deg, #e2e8f0, #94a3b8);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
-        .tab-btn { flex: 1; padding: 12px; border: none; border-radius: 9px; font-family: 'DM Mono', monospace; font-size: 13px; cursor: pointer; }
+        .tab-btn { flex: 1; padding: 12px; border: none; border-radius: 9px; font-family: 'DM Mono', monospace; font-size: 13px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
         .metric-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 20px; margin-bottom: 16px; }
-        .save-btn { width: 100%; padding: 18px; border: none; border-radius: 14px; color: white; font-family: 'Playfair Display', serif; font-size: 19px; font-weight: bold; margin-top: 20px; }
-        input[type=date], textarea { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px; color: #e2e8f0; font-family: 'DM Mono', monospace; font-size: 16px; outline: none; }
+        .save-btn { width: 100%; padding: 18px; border: none; border-radius: 14px; color: white; font-family: 'Playfair Display', serif; font-size: 19px; font-weight: bold; margin-top: 20px; cursor: pointer; }
+        input[type=date], textarea { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px; color: #e2e8f0; font-family: 'DM Mono', monospace; font-size: 16px; outline: none; -webkit-appearance: none; }
         .field-label { font-size: 11px; color: rgba(255,255,255,0.4); font-family: 'DM Mono', monospace; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
-        
         .history-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 14px; margin-bottom: 12px; overflow: hidden; }
-        .history-header { width: 100%; background: none; border: none; padding: 16px; display: flex; align-items: center; justify-content: space-between; color: inherit; }
-        .history-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .history-header { width: 100%; background: none; border: none; padding: 16px; display: flex; align-items: center; justify-content: space-between; color: inherit; text-align: left; }
+        .history-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
         .history-metric-item { background: rgba(255,255,255,0.03); padding: 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); }
-        
-        .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
-        .unit-badge { background: rgba(99,102,241,0.2); color: #a5b4fc; padding: 4px 8px; border-radius: 6px; font-family: 'DM Mono', monospace; font-size: 12px; }
-        .quick-btn { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 8px 10px; border-radius: 8px; font-size: 11px; font-family: 'DM Mono', monospace; cursor: pointer; }
-// New helper to handle drink additions
-function addDrink(name, units) {
-    state.values.units += units;
-    const currentText = state.values.drinks.trim();
-    // Add comma if there's already text
-    const separator = currentText.length > 0 ? ", " : "";
-    state.values.drinks = currentText + separator + name;
-    render();
+        .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+        .unit-badge { background: rgba(99,102,241,0.2); color: #a5b4fc; padding: 4px 8px; border-radius: 6px; font-family: 'DM Mono', monospace; font-size: 12px; font-weight: bold; }
+        .quick-btn { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 10px 8px; border-radius: 8px; font-size: 11px; font-family: 'DM Mono', monospace; cursor: pointer; flex: 1; min-width: 70px; }
+    </style>
+</head>
+<body>
+    <div id="app"></div>
+
+<script>
+const METRICS = [
+  { id:"drunkenness",  label:"Drunkenness",   emoji:"🍺", levels:["Low","Moderate","High","V. High"], colors:["#4ade80","#facc15","#fb923c","#ef4444"] },
+  { id:"embarrassment",label:"Embarrassment", emoji:"😳", levels:["None","Modest","Quite","Very"], colors:["#4ade80","#facc15","#fb923c","#ef4444"] },
+  { id:"hangover",     label:"Hangover",      emoji:"🤕", levels:["None","Slight","Quite","Very"], colors:["#4ade80","#facc15","#fb923c","#ef4444"] },
+  { id:"mental",       label:"Mental State",  emoji:"🧠", levels:["Fine","Low","Not Great","Depressed"], colors:["#4ade80","#a3e635","#fb923c","#8b5cf6"] }
+];
+
+const todayStr = () => new Date().toISOString().split('T')[0];
+const defaultValues = () => ({ drunkenness:0, embarrassment:0, hangover:0, mental:0, drinks:"", incidents:"", note:"", date:todayStr(), units: 0 });
+
+let state = {
+  tab: "survey",
+  values: defaultValues(),
+  history: JSON.parse(localStorage.getItem("drinking_diary_v2") || "[]"),
+  saved: false,
+  expandedId: null
+};
+
+// Internal Helper for building elements
+function el(tag, attrs, ...children) {
+  const e = document.createElement(tag);
+  if (attrs) {
+    Object.keys(attrs).forEach(k => {
+      if (k === "style" && typeof attrs[k] === "object") Object.assign(e.style, attrs[k]);
+      else if (k === "className") e.className = attrs[k];
+      else if (k.startsWith("on")) e.addEventListener(k.toLowerCase().substring(2), attrs[k]);
+      else e[k] = attrs[k];
+    });
+  }
+  children.flat().forEach(child => {
+    if (child == null || child === false) return;
+    e.appendChild(typeof child === "string" ? document.createTextNode(child) : child);
+  });
+  return e;
+}
+
+const setState = (patch) => { 
+    Object.assign(state, patch); 
+    render(); 
+};
+
+function handleAddDrink(name, unitValue) {
+    const currentUnits = state.values.units || 0;
+    const currentDrinks = state.values.drinks || "";
+    const separator = currentDrinks.trim().length > 0 ? ", " : "";
+    
+    setState({
+        values: {
+            ...state.values,
+            units: currentUnits + unitValue,
+            drinks: currentDrinks + separator + name
+        }
+    });
 }
 
 function render() {
   const root = document.getElementById("app");
+  if (!root) return;
   root.innerHTML = "";
   
+  // Header
   root.appendChild(el("div", {style:{textAlign:"center", padding:"20px 0"}},
     el("div", {style:{fontSize:"32px"}}, "🥃"),
     el("h1", {className:"page-title"}, "The Drinking Diary")
   ));
 
-  const tabs = el("div", {style:{display:"flex", background:"rgba(255,255,255,0.05)", borderRadius:"12px", padding:"4px", marginBottom:"24px"}},
+  // Tab Switcher
+  root.appendChild(el("div", {style:{display:"flex", background:"rgba(255,255,255,0.05)", borderRadius:"12px", padding:"4px", marginBottom:"24px"}},
     ["survey", "history"].map(t => el("button", {
       className: "tab-btn",
       style: { background: state.tab === t ? "rgba(255,255,255,0.1)" : "transparent", color: state.tab === t ? "#fff" : "#666" },
-      onclick: () => setState({tab: t})
+      onclick: () => setState({tab: t, expandedId: null})
     }, t === "survey" ? "📝 Log" : `📅 History (${state.history.length})`))
-  );
-  root.appendChild(tabs);
+  ));
 
-  root.appendChild(state.tab === "survey" ? Survey() : History());
+  if (state.tab === "survey") {
+    root.appendChild(renderSurvey());
+  } else {
+    root.appendChild(renderHistory());
+  }
 }
 
-function Survey() {
-  const container = el("div");
+function renderSurvey() {
+  const view = el("div");
 
-  container.appendChild(el("div", {style:{marginBottom:"20px"}},
+  // Date Picker
+  view.appendChild(el("div", {style:{marginBottom:"20px"}},
     el("div", {className:"field-label"}, "Session Date"),
     el("input", {type:"date", value:state.values.date, onchange: e => state.values.date = e.target.value})
   ));
 
+  // Slider Metrics
   METRICS.forEach(m => {
     const val = state.values[m.id];
     const color = m.colors[val];
-    container.appendChild(el("div", {className:"metric-card", style:{borderLeft:`4px solid ${color}`}},
+    view.appendChild(el("div", {className:"metric-card", style:{borderLeft:`4px solid ${color}`}},
       el("div", {style:{display:"flex", justifyContent:"space-between", marginBottom:"15px"}},
         el("span", {}, `${m.emoji} ${m.label}`),
         el("span", {style:{color:color, fontWeight:"bold"}}, m.levels[val])
@@ -91,28 +149,29 @@ function Survey() {
     ));
   });
 
-  const unitBox = el("div", {style:{marginBottom:"20px", padding:"16px", background:"rgba(99,102,241,0.05)", borderRadius:"12px", border:"1px solid rgba(99,102,241,0.1)"}},
+  // Unit Calculator
+  view.appendChild(el("div", {className:"metric-card", style:{background:"rgba(99,102,241,0.05)", border:"1px solid rgba(99,102,241,0.1)"}},
     el("div", {style:{display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"12px"}},
-        el("div", {className:"field-label", style:{marginBottom:0}}, "🍷 Unit Estimator"),
-        el("div", {className:"unit-badge"}, `${state.values.units.toFixed(1)} Units`)
+        el("div", {className:"field-label", style:{margin:0}}, "🍷 Units & Drinks"),
+        el("div", {className:"unit-badge"}, `${(state.values.units || 0).toFixed(1)} Units`)
     ),
     el("div", {style:{display:"flex", gap:"6px", flexWrap:"wrap", marginBottom:"15px"}},
-        el("button", {className:"quick-btn", onclick: () => addDrink("Shot", 1.0)}, "+ Shot"),
-        el("button", {className:"quick-btn", onclick: () => addDrink("Wine", 2.1)}, "+ Wine"),
-        el("button", {className:"quick-btn", onclick: () => addDrink("Pint 4%", 2.3)}, "+ Pint 4%"),
-        el("button", {className:"quick-btn", onclick: () => addDrink("Pint 5%", 2.8)}, "+ Pint 5%"),
-        el("button", {className:"quick-btn", style:{color:"#f87171", background:"rgba(239,68,68,0.1)"}, onclick: () => { state.values.units = 0; state.values.drinks = ""; render(); }}, "Reset")
+        el("button", {className:"quick-btn", onclick: () => handleAddDrink("Shot", 1.0)}, "+ Shot"),
+        el("button", {className:"quick-btn", onclick: () => handleAddDrink("Wine", 2.1)}, "+ Wine"),
+        el("button", {className:"quick-btn", onclick: () => handleAddDrink("Pint 4%", 2.3)}, "+ Pint 4%"),
+        el("button", {className:"quick-btn", onclick: () => handleAddDrink("Pint 5%", 2.8)}, "+ Pint 5%"),
+        el("button", {className:"quick-btn", style:{color:"#f87171", border:"1px solid #f8717133"}, onclick: () => setState({values: {...state.values, units: 0, drinks: ""}})}, "Reset")
     ),
     el("textarea", {
-        placeholder: "Detail your drinks here...", 
+        placeholder: "Drinks will appear here...", 
         value: state.values.drinks,
         rows: 3,
         oninput: e => state.values.drinks = e.target.value
-      })
-  );
-  container.appendChild(unitBox);
+    })
+  ));
 
-  container.appendChild(el("div", {style:{marginBottom:"16px"}},
+  // Incidents
+  view.appendChild(el("div", {style:{marginBottom:"16px"}},
     el("div", {className:"field-label"}, "😳 Incidents"),
     el("textarea", {
       placeholder: "Anything regrettable?", 
@@ -121,42 +180,78 @@ function Survey() {
     })
   ));
 
+  // Save Button
+  view.appendChild(el("button", {
+    className: "save-btn",
+    style: { background: state.saved ? "#22c55e" : "linear-gradient(135deg,#6366f1,#8b5cf6)" },
+    onclick: () => {
+      const entry = {...state.values, id: Date.now()};
+      const newHistory = [entry, ...state.history];
+      localStorage.setItem("drinking_diary_v2", JSON.stringify(newHistory));
+      setState({history: newHistory, saved: true, values: defaultValues()});
+      setTimeout(() => setState({saved: false, tab: "history"}), 1000);
+    }
+  }, state.saved ? "✓ Saved!" : "Save Session"));
+
+  return view;
+}
+
+function renderHistory() {
+  if (state.history.length === 0) return el("div", {style:{textAlign:"center", padding:"60px 20px", color:"#666"}}, "No session history found.");
+  
+  const container = el("div");
+  state.history.forEach(entry => {
+    const isExpanded = state.expandedId === entry.id;
+    const card = el("div", {className:"history-card"},
+      el("button", {className:"history-header", onclick: () => setState({expandedId: isExpanded ? null : entry.id})},
+        el("div", {}, 
+           el("div", {style:{fontSize:"15px", fontWeight:"bold", color:"#fff"}}, entry.date),
+           el("div", {style:{fontSize:"12px", color:"#818cf8", marginTop:"2px"}}, `${(entry.units || 0).toFixed(1)} Units`)
+        ),
+        el("div", {style:{display:"flex", gap:"5px", alignItems:"center"}}, 
+          METRICS.map(m => el("div", {className:"dot", style:{background:m.colors[entry[m.id] || 0]}})),
+          el("span", {style:{marginLeft:"8px", fontSize:"10px", opacity:0.3}}, isExpanded ? "▲" : "▼")
+        )
+      )
+    );
+    
+    if (isExpanded) {
+        card.appendChild(el("div", {style:{padding:"0 16px 16px", background:"rgba(0,0,0,0.2)"}},
             el("div", {className: "history-grid"},
                 METRICS.map(m => {
-                    const levelIdx = entry[m.id] || 0;
+                    const idx = entry[m.id] || 0;
                     return el("div", {className: "history-metric-item"},
-                        el("div", {style:{fontSize:"10px", color:"rgba(255,255,255,0.3)", textTransform:"uppercase", marginBottom:"4px"}}, m.label),
-                        el("div", {style:{color: m.colors[levelIdx], fontWeight:"600"}}, `${m.emoji} ${m.levels[levelIdx]}`)
+                        el("div", {style:{fontSize:"9px", color:"rgba(255,255,255,0.3)", marginBottom:"2px"}}, m.label),
+                        el("div", {style:{color: m.colors[idx], fontWeight:"600", fontSize:"12px"}}, `${m.emoji} ${m.levels[idx]}`)
                     );
                 })
             ),
-            el("div", {style:{marginBottom:"12px", color:"#c4b5fd", whiteSpace:"pre-wrap", background:"rgba(99,102,241,0.05)", padding:"10px", borderRadius:"8px", borderLeft:"2px solid #6366f1"}}, 
-                el("div", {style:{fontSize:"10px", color:"#818cf8", marginBottom:"4px"}}, "DRINKS LOG"),
-                entry.drinks || "No detail added"
+            el("div", {style:{marginBottom:"10px", color:"#c4b5fd", fontSize:"13px", background:"rgba(255,255,255,0.03)", padding:"10px", borderRadius:"8px"}}, 
+                el("div", {style:{fontSize:"9px", opacity:0.5, marginBottom:"4px"}}, "DRINKS"),
+                entry.drinks || "No details"
             ),
-            entry.incidents ? el("div", {style:{marginBottom:"12px", color:"#fca5a5", background:"rgba(239,68,68,0.05)", padding:"10px", borderRadius:"8px", borderLeft:"2px solid #ef4444"}}, 
-                el("div", {style:{fontSize:"10px", color:"#ef4444", marginBottom:"4px"}}, "INCIDENTS"),
+            entry.incidents && el("div", {style:{color:"#fca5a5", fontSize:"13px", background:"rgba(239,68,68,0.05)", padding:"10px", borderRadius:"8px"}}, 
+                el("div", {style:{fontSize:"9px", opacity:0.5, marginBottom:"4px"}}, "INCIDENTS"),
                 entry.incidents
-            ) : null,
+            ),
             el("button", {
-                style:{color:"#ef4444", background:"rgba(239,68,68,0.1)", border:"none", fontSize:"10px", padding:"6px 12px", borderRadius:"6px", textTransform:"uppercase", letterSpacing:"1px", marginTop:"10px", width:"100%"},
+                style:{color:"#ef4444", background:"none", border:"none", fontSize:"10px", marginTop:"15px", textDecoration:"underline", cursor:"pointer"},
                 onclick: (e) => {
-                    e.stopPropagation();
-                    if(confirm("Delete this entry?")) {
+                    if(confirm("Delete this entry forever?")) {
                         const filtered = state.history.filter(h => h.id !== entry.id);
                         localStorage.setItem("drinking_diary_v2", JSON.stringify(filtered));
                         setState({history: filtered});
                     }
                 }
             }, "Delete Entry")
-        );
-        card.appendChild(detailBody);
+        ));
     }
     container.appendChild(card);
   });
   return container;
 }
 
+// Initial render
 render();
 </script>
 </body>
