@@ -5,255 +5,177 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>The Drinking Diary</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <title>Drinking Diary</title>
     <style>
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        /* Essential Reset */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             background-color: #0a0d14;
-            background-image: radial-gradient(ellipse at 20% 50%, #1a1025 0%, transparent 60%),
-                              radial-gradient(ellipse at 80% 20%, #0d1a2e 0%, transparent 60%);
-            min-height: 100vh; color: #e2e8f0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: #e2e8f0;
+            font-family: -apple-system, system-ui, sans-serif;
+            padding: 20px 16px 100px;
             padding-top: env(safe-area-inset-top);
-            overflow-x: hidden;
         }
-        #app { max-width: 480px; margin: 0 auto; padding: 20px 16px 100px; }
-        .page-title {
-            font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 700;
-            background: linear-gradient(135deg, #e2e8f0, #94a3b8);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        #app { max-width: 480px; margin: 0 auto; }
+        
+        /* UI Elements */
+        .header { text-align: center; margin-bottom: 20px; }
+        .title { font-size: 24px; margin-top: 10px; color: #fff; }
+        
+        .tabs { display: flex; background: rgba(255,255,255,0.05); border-radius: 12px; padding: 4px; margin-bottom: 20px; }
+        .tab-btn { flex: 1; padding: 12px; border: none; background: transparent; color: #666; border-radius: 8px; cursor: pointer; }
+        .tab-btn.active { background: rgba(255,255,255,0.1); color: #fff; }
+
+        .card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 15px; margin-bottom: 15px; }
+        .label { font-size: 11px; color: rgba(255,255,255,0.4); text-transform: uppercase; margin-bottom: 8px; display: block; }
+        
+        input[type=range] { width: 100%; margin: 10px 0; }
+        textarea, input[type=date] { 
+            width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); 
+            border-radius: 8px; padding: 12px; color: #fff; font-size: 16px; outline: none;
         }
-        .tab-btn { flex: 1; padding: 12px; border: none; border-radius: 9px; font-family: 'DM Mono', monospace; font-size: 13px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-        .metric-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 20px; margin-bottom: 16px; }
-        .save-btn { width: 100%; padding: 18px; border: none; border-radius: 14px; color: white; font-family: 'Playfair Display', serif; font-size: 19px; font-weight: bold; margin-top: 20px; cursor: pointer; }
-        input[type=date], textarea { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px; color: #e2e8f0; font-family: 'DM Mono', monospace; font-size: 16px; outline: none; -webkit-appearance: none; }
-        .field-label { font-size: 11px; color: rgba(255,255,255,0.4); font-family: 'DM Mono', monospace; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
-        .history-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 14px; margin-bottom: 12px; overflow: hidden; }
-        .history-header { width: 100%; background: none; border: none; padding: 16px; display: flex; align-items: center; justify-content: space-between; color: inherit; text-align: left; }
-        .history-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
-        .history-metric-item { background: rgba(255,255,255,0.03); padding: 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); }
-        .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-        .unit-badge { background: rgba(99,102,241,0.2); color: #a5b4fc; padding: 4px 8px; border-radius: 6px; font-family: 'DM Mono', monospace; font-size: 12px; font-weight: bold; }
-        .quick-btn { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 10px 8px; border-radius: 8px; font-size: 11px; font-family: 'DM Mono', monospace; cursor: pointer; flex: 1; min-width: 70px; }
+
+        .quick-row { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; }
+        .btn-small { background: rgba(255,255,255,0.1); border: none; color: #fff; padding: 8px; border-radius: 6px; font-size: 12px; flex: 1; }
+        
+        .save-btn { 
+            width: 100%; padding: 18px; border: none; border-radius: 14px; 
+            background: linear-gradient(135deg,#6366f1,#8b5cf6); color: white; 
+            font-size: 18px; font-weight: bold; margin-top: 10px;
+        }
+
+        .history-item { background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.05); }
+        .unit-display { color: #818cf8; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div id="app"></div>
+
+<div id="app">Loading...</div>
 
 <script>
-const METRICS = [
-  { id:"drunkenness",  label:"Drunkenness",   emoji:"🍺", levels:["Low","Moderate","High","V. High"], colors:["#4ade80","#facc15","#fb923c","#ef4444"] },
-  { id:"embarrassment",label:"Embarrassment", emoji:"😳", levels:["None","Modest","Quite","Very"], colors:["#4ade80","#facc15","#fb923c","#ef4444"] },
-  { id:"hangover",     label:"Hangover",      emoji:"🤕", levels:["None","Slight","Quite","Very"], colors:["#4ade80","#facc15","#fb923c","#ef4444"] },
-  { id:"mental",       label:"Mental State",  emoji:"🧠", levels:["Fine","Low","Not Great","Depressed"], colors:["#4ade80","#a3e635","#fb923c","#8b5cf6"] }
-];
-
-const todayStr = () => new Date().toISOString().split('T')[0];
-const defaultValues = () => ({ drunkenness:0, embarrassment:0, hangover:0, mental:0, drinks:"", incidents:"", note:"", date:todayStr(), units: 0 });
-
-let state = {
-  tab: "survey",
-  values: defaultValues(),
-  history: JSON.parse(localStorage.getItem("drinking_diary_v2") || "[]"),
-  saved: false,
-  expandedId: null
+// --- DATA & STATE ---
+var historyData = JSON.parse(localStorage.getItem('diary_v3') || '[]');
+var currentTab = 'log'; // 'log' or 'history'
+var formData = {
+    date: new Date().toISOString().split('T')[0],
+    drunkenness: 0,
+    hangover: 0,
+    units: 0,
+    drinks: '',
+    incidents: ''
 };
 
-// Internal Helper for building elements
-function el(tag, attrs, ...children) {
-  const e = document.createElement(tag);
-  if (attrs) {
-    Object.keys(attrs).forEach(k => {
-      if (k === "style" && typeof attrs[k] === "object") Object.assign(e.style, attrs[k]);
-      else if (k === "className") e.className = attrs[k];
-      else if (k.startsWith("on")) e.addEventListener(k.toLowerCase().substring(2), attrs[k]);
-      else e[k] = attrs[k];
-    });
-  }
-  children.flat().forEach(child => {
-    if (child == null || child === false) return;
-    e.appendChild(typeof child === "string" ? document.createTextNode(child) : child);
-  });
-  return e;
-}
-
-const setState = (patch) => { 
-    Object.assign(state, patch); 
-    render(); 
-};
-
-function handleAddDrink(name, unitValue) {
-    const currentUnits = state.values.units || 0;
-    const currentDrinks = state.values.drinks || "";
-    const separator = currentDrinks.trim().length > 0 ? ", " : "";
+// --- FUNCTIONS ---
+function saveEntry() {
+    historyData.unshift(JSON.parse(JSON.stringify(formData)));
+    localStorage.setItem('diary_v3', JSON.stringify(historyData));
     
-    setState({
-        values: {
-            ...state.values,
-            units: currentUnits + unitValue,
-            drinks: currentDrinks + separator + name
-        }
-    });
+    // Reset form
+    formData.units = 0;
+    formData.drinks = '';
+    formData.incidents = '';
+    
+    currentTab = 'history';
+    render();
 }
 
+function addDrink(name, unitValue) {
+    formData.units += unitValue;
+    var sep = formData.drinks.length > 0 ? ", " : "";
+    formData.drinks += sep + name;
+    render();
+}
+
+function deleteEntry(index) {
+    if(confirm("Delete this?")) {
+        historyData.splice(index, 1);
+        localStorage.setItem('diary_v3', JSON.stringify(historyData));
+        render();
+    }
+}
+
+// --- RENDERER ---
 function render() {
-  const root = document.getElementById("app");
-  if (!root) return;
-  root.innerHTML = "";
-  
-  // Header
-  root.appendChild(el("div", {style:{textAlign:"center", padding:"20px 0"}},
-    el("div", {style:{fontSize:"32px"}}, "🥃"),
-    el("h1", {className:"page-title"}, "The Drinking Diary")
-  ));
+    var app = document.getElementById('app');
+    var html = '';
 
-  // Tab Switcher
-  root.appendChild(el("div", {style:{display:"flex", background:"rgba(255,255,255,0.05)", borderRadius:"12px", padding:"4px", marginBottom:"24px"}},
-    ["survey", "history"].map(t => el("button", {
-      className: "tab-btn",
-      style: { background: state.tab === t ? "rgba(255,255,255,0.1)" : "transparent", color: state.tab === t ? "#fff" : "#666" },
-      onclick: () => setState({tab: t, expandedId: null})
-    }, t === "survey" ? "📝 Log" : `📅 History (${state.history.length})`))
-  ));
+    // Header
+    html += '<div class="header"><div>🥃</div><div class="title">The Drinking Diary</div></div>';
 
-  if (state.tab === "survey") {
-    root.appendChild(renderSurvey());
-  } else {
-    root.appendChild(renderHistory());
-  }
-}
+    // Tabs
+    html += '<div class="tabs">';
+    html += '<button class="tab-btn '+(currentTab=='log'?'active':'')+'" onclick="currentTab=\'log\';render()">📝 Log</button>';
+    html += '<button class="tab-btn '+(currentTab=='history'?'active':'')+'" onclick="currentTab=\'history\';render()">📅 History ('+historyData.length+')</button>';
+    html += '</div>';
 
-function renderSurvey() {
-  const view = el("div");
+    if (currentTab == 'log') {
+        html += '<div class="card">';
+        html += '<span class="label">Date</span>';
+        html += '<input type="date" value="'+formData.date+'" onchange="formData.date=this.value">';
+        html += '</div>';
 
-  // Date Picker
-  view.appendChild(el("div", {style:{marginBottom:"20px"}},
-    el("div", {className:"field-label"}, "Session Date"),
-    el("input", {type:"date", value:state.values.date, onchange: e => state.values.date = e.target.value})
-  ));
+        // Sliders
+        html += '<div class="card">';
+        html += '<span class="label">Drunkenness: '+formData.drunkenness+'</span>';
+        html += '<input type="range" min="0" max="3" value="'+formData.drunkenness+'" oninput="formData.drunkenness=parseInt(this.value);render()">';
+        html += '</div>';
 
-  // Slider Metrics
-  METRICS.forEach(m => {
-    const val = state.values[m.id];
-    const color = m.colors[val];
-    view.appendChild(el("div", {className:"metric-card", style:{borderLeft:`4px solid ${color}`}},
-      el("div", {style:{display:"flex", justifyContent:"space-between", marginBottom:"15px"}},
-        el("span", {}, `${m.emoji} ${m.label}`),
-        el("span", {style:{color:color, fontWeight:"bold"}}, m.levels[val])
-      ),
-      el("input", {
-        type:"range", min:0, max:3, value:val, 
-        style:{width:"100%", accentColor:color},
-        oninput: e => { state.values[m.id] = parseInt(e.target.value); render(); }
-      })
-    ));
-  });
+        html += '<div class="card">';
+        html += '<span class="label">Hangover: '+formData.hangover+'</span>';
+        html += '<input type="range" min="0" max="3" value="'+formData.hangover+'" oninput="formData.hangover=parseInt(this.value);render()">';
+        html += '</div>';
 
-  // Unit Calculator
-  view.appendChild(el("div", {className:"metric-card", style:{background:"rgba(99,102,241,0.05)", border:"1px solid rgba(99,102,241,0.1)"}},
-    el("div", {style:{display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"12px"}},
-        el("div", {className:"field-label", style:{margin:0}}, "🍷 Units & Drinks"),
-        el("div", {className:"unit-badge"}, `${(state.values.units || 0).toFixed(1)} Units`)
-    ),
-    el("div", {style:{display:"flex", gap:"6px", flexWrap:"wrap", marginBottom:"15px"}},
-        el("button", {className:"quick-btn", onclick: () => handleAddDrink("Shot", 1.0)}, "+ Shot"),
-        el("button", {className:"quick-btn", onclick: () => handleAddDrink("Wine", 2.1)}, "+ Wine"),
-        el("button", {className:"quick-btn", onclick: () => handleAddDrink("Pint 4%", 2.3)}, "+ Pint 4%"),
-        el("button", {className:"quick-btn", onclick: () => handleAddDrink("Pint 5%", 2.8)}, "+ Pint 5%"),
-        el("button", {className:"quick-btn", style:{color:"#f87171", border:"1px solid #f8717133"}, onclick: () => setState({values: {...state.values, units: 0, drinks: ""}})}, "Reset")
-    ),
-    el("textarea", {
-        placeholder: "Drinks will appear here...", 
-        value: state.values.drinks,
-        rows: 3,
-        oninput: e => state.values.drinks = e.target.value
-    })
-  ));
+        // Units
+        html += '<div class="card" style="border: 1px solid #6366f166">';
+        html += '<div style="display:flex; justify-content:space-between; margin-bottom:10px;">';
+        html += '<span class="label">Units & Drinks</span>';
+        html += '<span class="unit-display">'+formData.units.toFixed(1)+' Units</span>';
+        html += '</div>';
+        
+        html += '<div class="quick-row">';
+        html += '<button class="btn-small" onclick="addDrink(\'Shot\', 1)">+ Shot</button>';
+        html += '<button class="btn-small" onclick="addDrink(\'Wine\', 2.1)">+ Wine</button>';
+        html += '<button class="btn-small" onclick="addDrink(\'Pint 4%\', 2.3)">+ Pt 4%</button>';
+        html += '<button class="btn-small" onclick="addDrink(\'Pint 5%\', 2.8)">+ Pt 5%</button>';
+        html += '</div>';
 
-  // Incidents
-  view.appendChild(el("div", {style:{marginBottom:"16px"}},
-    el("div", {className:"field-label"}, "😳 Incidents"),
-    el("textarea", {
-      placeholder: "Anything regrettable?", 
-      value: state.values.incidents,
-      oninput: e => state.values.incidents = e.target.value
-    })
-  ));
+        html += '<textarea rows="3" placeholder="Click buttons or type here..." oninput="formData.drinks=this.value">'+formData.drinks+'</textarea>';
+        html += '</div>';
 
-  // Save Button
-  view.appendChild(el("button", {
-    className: "save-btn",
-    style: { background: state.saved ? "#22c55e" : "linear-gradient(135deg,#6366f1,#8b5cf6)" },
-    onclick: () => {
-      const entry = {...state.values, id: Date.now()};
-      const newHistory = [entry, ...state.history];
-      localStorage.setItem("drinking_diary_v2", JSON.stringify(newHistory));
-      setState({history: newHistory, saved: true, values: defaultValues()});
-      setTimeout(() => setState({saved: false, tab: "history"}), 1000);
+        // Incidents
+        html += '<div class="card">';
+        html += '<span class="label">Incidents</span>';
+        html += '<textarea rows="2" oninput="formData.incidents=this.value">'+formData.incidents+'</textarea>';
+        html += '</div>';
+
+        html += '<button class="save-btn" onclick="saveEntry()">Save Session</button>';
+
+    } else {
+        // History List
+        if (historyData.length == 0) {
+            html += '<div style="text-align:center; padding:40px; color:#666;">No logs yet.</div>';
+        } else {
+            for (var i = 0; i < historyData.length; i++) {
+                var item = historyData[i];
+                html += '<div class="history-item">';
+                html += '<div style="display:flex; justify-content:space-between; margin-bottom:8px;">';
+                html += '<strong>'+item.date+'</strong>';
+                html += '<span class="unit-display">'+(item.units ? item.units.toFixed(1) : 0)+' Units</span>';
+                html += '</div>';
+                html += '<div style="font-size:13px; color:#aaa; margin-bottom:8px;">'+item.drinks+'</div>';
+                if(item.incidents) html += '<div style="font-size:13px; color:#fca5a5;">⚠️ '+item.incidents+'</div>';
+                html += '<button style="background:none; border:none; color:#ef4444; font-size:10px; margin-top:10px; text-decoration:underline;" onclick="deleteEntry('+i+')">Delete</button>';
+                html += '</div>';
+            }
+        }
     }
-  }, state.saved ? "✓ Saved!" : "Save Session"));
 
-  return view;
+    app.innerHTML = html;
 }
 
-function renderHistory() {
-  if (state.history.length === 0) return el("div", {style:{textAlign:"center", padding:"60px 20px", color:"#666"}}, "No session history found.");
-  
-  const container = el("div");
-  state.history.forEach(entry => {
-    const isExpanded = state.expandedId === entry.id;
-    const card = el("div", {className:"history-card"},
-      el("button", {className:"history-header", onclick: () => setState({expandedId: isExpanded ? null : entry.id})},
-        el("div", {}, 
-           el("div", {style:{fontSize:"15px", fontWeight:"bold", color:"#fff"}}, entry.date),
-           el("div", {style:{fontSize:"12px", color:"#818cf8", marginTop:"2px"}}, `${(entry.units || 0).toFixed(1)} Units`)
-        ),
-        el("div", {style:{display:"flex", gap:"5px", alignItems:"center"}}, 
-          METRICS.map(m => el("div", {className:"dot", style:{background:m.colors[entry[m.id] || 0]}})),
-          el("span", {style:{marginLeft:"8px", fontSize:"10px", opacity:0.3}}, isExpanded ? "▲" : "▼")
-        )
-      )
-    );
-    
-    if (isExpanded) {
-        card.appendChild(el("div", {style:{padding:"0 16px 16px", background:"rgba(0,0,0,0.2)"}},
-            el("div", {className: "history-grid"},
-                METRICS.map(m => {
-                    const idx = entry[m.id] || 0;
-                    return el("div", {className: "history-metric-item"},
-                        el("div", {style:{fontSize:"9px", color:"rgba(255,255,255,0.3)", marginBottom:"2px"}}, m.label),
-                        el("div", {style:{color: m.colors[idx], fontWeight:"600", fontSize:"12px"}}, `${m.emoji} ${m.levels[idx]}`)
-                    );
-                })
-            ),
-            el("div", {style:{marginBottom:"10px", color:"#c4b5fd", fontSize:"13px", background:"rgba(255,255,255,0.03)", padding:"10px", borderRadius:"8px"}}, 
-                el("div", {style:{fontSize:"9px", opacity:0.5, marginBottom:"4px"}}, "DRINKS"),
-                entry.drinks || "No details"
-            ),
-            entry.incidents && el("div", {style:{color:"#fca5a5", fontSize:"13px", background:"rgba(239,68,68,0.05)", padding:"10px", borderRadius:"8px"}}, 
-                el("div", {style:{fontSize:"9px", opacity:0.5, marginBottom:"4px"}}, "INCIDENTS"),
-                entry.incidents
-            ),
-            el("button", {
-                style:{color:"#ef4444", background:"none", border:"none", fontSize:"10px", marginTop:"15px", textDecoration:"underline", cursor:"pointer"},
-                onclick: (e) => {
-                    if(confirm("Delete this entry forever?")) {
-                        const filtered = state.history.filter(h => h.id !== entry.id);
-                        localStorage.setItem("drinking_diary_v2", JSON.stringify(filtered));
-                        setState({history: filtered});
-                    }
-                }
-            }, "Delete Entry")
-        ));
-    }
-    container.appendChild(card);
-  });
-  return container;
-}
-
-// Initial render
+// Start
 render();
 </script>
+
 </body>
 </html>
-
