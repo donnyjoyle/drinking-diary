@@ -1,336 +1,202 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Drinking Diary">
-<title>The Drinking Diary</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html { min-height: 100%; }
-  body {
-    background-color: #0a0d14;
-    background-image: radial-gradient(ellipse at 20% 50%, #1a1025 0%, transparent 60%),
-                      radial-gradient(ellipse at 80% 20%, #0d1a2e 0%, transparent 60%);
-    min-height: 100vh; color: #e2e8f0; font-family: sans-serif;
-  }
-  #app { max-width: 480px; margin: 0 auto; padding: 0 16px 80px; }
-  input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 100%; background: transparent; cursor: pointer; }
-  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 0; height: 0; }
-  input[type=date], textarea { -webkit-appearance: none; appearance: none; }
-  textarea { resize: vertical; }
-  button { -webkit-tap-highlight-color: transparent; font-family: inherit; }
-  .page-title {
-    font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 700;
-    background: linear-gradient(135deg, #e2e8f0, #94a3b8);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -0.5px;
-  }
-  .tab-btn { flex: 1; padding: 10px; border: none; cursor: pointer; border-radius: 9px; font-family: 'DM Mono', monospace; font-size: 13px; transition: all 0.2s; }
-  .metric-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 20px 24px; margin-bottom: 16px; }
-  .history-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 14px; margin-bottom: 10px; overflow: hidden; }
-  .history-header { width: 100%; background: none; border: none; cursor: pointer; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; }
-  .history-body { padding: 0 18px 16px; border-top: 1px solid rgba(255,255,255,0.06); }
-  .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
-  .save-btn { width: 100%; padding: 15px; border: none; border-radius: 12px; cursor: pointer; color: white; font-family: 'Playfair Display', serif; font-size: 17px; letter-spacing: 0.3px; transition: all 0.3s; }
-  .field-label { font-size: 11px; color: rgba(255,255,255,0.35); font-family: 'DM Mono', monospace; margin-bottom: 6px; }
-  input[type=date] { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 12px; color: #e2e8f0; font-family: 'DM Mono', monospace; font-size: 14px; outline: none; }
-  textarea { width: 100%; border-radius: 10px; padding: 10px 14px; font-family: 'DM Mono', monospace; font-size: 13px; outline: none; border: none; line-height: 1.5; }
-  .delete-btn { margin-top: 4px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); color: #f87171; border-radius: 8px; padding: 5px 14px; cursor: pointer; font-size: 12px; font-family: 'DM Mono', monospace; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>The Drinking Diary</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background-color: #0a0d14;
+            background-image: radial-gradient(ellipse at 20% 50%, #1a1025 0%, transparent 60%),
+                              radial-gradient(ellipse at 80% 20%, #0d1a2e 0%, transparent 60%);
+            min-height: 100vh; color: #e2e8f0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            padding-top: env(safe-area-inset-top);
+        }
+        #app { max-width: 480px; margin: 0 auto; padding: 20px 16px 100px; }
+        .page-title {
+            font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 700;
+            background: linear-gradient(135deg, #e2e8f0, #94a3b8);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .tab-btn { flex: 1; padding: 12px; border: none; border-radius: 9px; font-family: 'DM Mono', monospace; font-size: 13px; cursor: pointer; }
+        .metric-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 20px; margin-bottom: 16px; }
+        .save-btn { width: 100%; padding: 16px; border: none; border-radius: 12px; color: white; font-family: 'Playfair Display', serif; font-size: 18px; font-weight: bold; }
+        input[type=date], textarea { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px; color: #e2e8f0; font-family: 'DM Mono', monospace; font-size: 16px; }
+        .field-label { font-size: 11px; color: rgba(255,255,255,0.4); font-family: 'DM Mono', monospace; margin-bottom: 6px; text-transform: uppercase; }
+        .history-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 14px; margin-bottom: 10px; overflow: hidden; }
+        .history-header { width: 100%; background: none; border: none; padding: 16px; display: flex; align-items: center; justify-content: space-between; color: inherit; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+    </style>
 </head>
 <body>
-<div id="app"></div>
+    <div id="app"></div>
+
 <script>
-var METRICS = [
-  { id:"drunkenness",  label:"Drunkenness",   emoji:"\uD83C\uDF7A", levels:["Low","Moderate","High","Very High"],     colors:["#4ade80","#facc15","#fb923c","#ef4444"] },
-  { id:"embarrassment",label:"Embarrassment", emoji:"\uD83D\uDE33", levels:["None","Modest","Quite","Very"],           colors:["#4ade80","#facc15","#fb923c","#ef4444"] },
-  { id:"hangover",     label:"Hangover",      emoji:"\uD83E\uDD15", levels:["None","Slight","Quite","Very"],           colors:["#4ade80","#facc15","#fb923c","#ef4444"] },
-  { id:"mental",       label:"Mental State",  emoji:"\uD83E\uDDE0", levels:["Fine","A Bit Low","Not Great","Depressed"],colors:["#4ade80","#a3e635","#fb923c","#8b5cf6"] }
+const METRICS = [
+  { id:"drunkenness",  label:"Drunkenness",   emoji:"🍺", levels:["Low","Moderate","High","V. High"], colors:["#4ade80","#facc15","#fb923c","#ef4444"] },
+  { id:"embarrassment",label:"Embarrassment", emoji:"😳", levels:["None","Modest","Quite","Very"], colors:["#4ade80","#facc15","#fb923c","#ef4444"] },
+  { id:"hangover",     label:"Hangover",      emoji:"🤕", levels:["None","Slight","Quite","Very"], colors:["#4ade80","#facc15","#fb923c","#ef4444"] },
+  { id:"mental",       label:"Mental State",  emoji:"🧠", levels:["Fine","Low","Not Great","Depressed"], colors:["#4ade80","#a3e635","#fb923c","#8b5cf6"] }
 ];
 
-function todayStr() { return new Date().toISOString().split(“T”)[0]; }
+const todayStr = () => new Date().toISOString().split('T')[0];
+const defaultValues = () => ({ drunkenness:0, embarrassment:0, hangover:0, mental:0, drinks:"", incidents:"", note:"", date:todayStr() });
 
-function defaultValues() {
-return { drunkenness:0, embarrassment:0, hangover:0, mental:0, drinks:””, incidents:””, note:””, date:todayStr() };
+let state = {
+  tab: "survey",
+  values: defaultValues(),
+  history: JSON.parse(localStorage.getItem("drinking_diary_v2") || "[]"),
+  saved: false,
+  expandedId: null
+};
+
+function el(tag, attrs, ...children) {
+  const e = document.createElement(tag);
+  if (attrs) {
+    Object.keys(attrs).forEach(k => {
+      if (k === "style" && typeof attrs[k] === "object") Object.assign(e.style, attrs[k]);
+      else if (k === "className") e.className = attrs[k];
+      else if (k.startsWith("on")) e.addEventListener(k.toLowerCase().substring(2), attrs[k]);
+      else e[k] = attrs[k];
+    });
+  }
+  children.flat().forEach(child => {
+    if (child == null) return;
+    e.appendChild(typeof child === "string" ? document.createTextNode(child) : child);
+  });
+  return e;
 }
 
-var state = { tab:“survey”, values:defaultValues(), history:[], saved:false, expandedId:null };
+const setState = (patch) => { Object.assign(state, patch); render(); };
 
-function loadHistory() {
-try { return JSON.parse(localStorage.getItem(“drinking_diary_v2”) || “[]”); } catch(e) { return []; }
-}
-function saveHistory(h) {
-localStorage.setItem(“drinking_diary_v2”, JSON.stringify(h));
-state.history = h;
-}
-state.history = loadHistory();
+function render() {
+  const root = document.getElementById("app");
+  root.innerHTML = "";
+  
+  // Header
+  root.appendChild(el("div", {style:{textAlign:"center", padding:"20px 0"}},
+    el("div", {style:{fontSize:"32px"}}, "🥃"),
+    el("h1", {className:"page-title"}, "The Drinking Diary")
+  ));
 
-function el(tag, attrs) {
-var e = document.createElement(tag);
-var children = Array.prototype.slice.call(arguments, 2);
-var keys = Object.keys(attrs || {});
-for (var i = 0; i < keys.length; i++) {
-var k = keys[i], v = attrs[k];
-if (k === “style” && typeof v === “object”) { Object.assign(e.style, v); }
-else if (k === “className”) { e.className = v; }
-else if (k.indexOf(“on”) === 0 && typeof v === “function”) { e.addEventListener(k.slice(2).toLowerCase(), v); }
-else { e[k] = v; }
-}
-function append(child) {
-if (child == null) return;
-if (Array.isArray(child)) { child.forEach(append); }
-else if (typeof child === “string”) { e.appendChild(document.createTextNode(child)); }
-else { e.appendChild(child); }
-}
-children.forEach(append);
-return e;
-}
+  // Tabs
+  const tabs = el("div", {style:{display:"flex", background:"rgba(255,255,255,0.05)", borderRadius:"12px", padding:"4px", marginBottom:"24px"}},
+    ["survey", "history"].map(t => el("button", {
+      className: "tab-btn",
+      style: { background: state.tab === t ? "rgba(255,255,255,0.1)" : "transparent", color: state.tab === t ? "#fff" : "#666" },
+      onclick: () => setState({tab: t})
+    }, t === "survey" ? "📝 Log" : `📅 History (${state.history.length})`))
+  );
+  root.appendChild(tabs);
 
-function setState(patch) { Object.assign(state, patch); render(); }
-
-function Header() {
-return el(“div”, {style:{paddingTop:“48px”,paddingBottom:“28px”,textAlign:“center”}},
-el(“div”, {style:{fontSize:“32px”,marginBottom:“6px”}}, “\uD83E\uDD43”),
-el(“h1”, {className:“page-title”}, “The Drinking Diary”),
-el(“p”, {style:{color:“rgba(255,255,255,0.35)”,fontSize:“13px”,fontFamily:”‘DM Mono’,monospace”,marginTop:“6px”}}, “honest reflections, tracked over time”)
-);
-}
-
-function Tabs() {
-var wrap = el(“div”, {style:{display:“flex”,background:“rgba(255,255,255,0.05)”,borderRadius:“12px”,padding:“4px”,marginBottom:“24px”}});
-[“survey”,“history”].forEach(function(t) {
-var label = t === “survey” ? “\uD83D\uDCDD Log Session” : (”\uD83D\uDCC5 History (” + state.history.length + “)”);
-var active = state.tab === t;
-wrap.appendChild(el(“button”, {
-className:“tab-btn”,
-style:{ background: active ? “rgba(255,255,255,0.1)” : “transparent”, color: active ? “#e2e8f0” : “rgba(255,255,255,0.35)” },
-onClick: (function(tab){ return function(){ setState({tab:tab}); }; })(t)
-}, label));
-});
-return wrap;
-}
-
-function Slider(metric) {
-var val = state.values[metric.id];
-var color = metric.colors[val];
-var max = metric.levels.length - 1;
-var pct = max === 0 ? 0 : (val / max) * 100;
-
-var card = el(“div”, {className:“metric-card”, style:{borderLeft:“3px solid “ + color, transition:“border-color 0.3s”}});
-
-card.appendChild(el(“div”, {style:{display:“flex”,justifyContent:“space-between”,alignItems:“center”,marginBottom:“12px”}},
-el(“div”, {style:{display:“flex”,alignItems:“center”,gap:“10px”}},
-el(“span”, {style:{fontSize:“22px”}}, metric.emoji),
-el(“span”, {style:{fontFamily:”‘Playfair Display’,serif”,fontSize:“16px”,color:”#e2e8f0”,letterSpacing:“0.3px”}}, metric.label)
-),
-el(“span”, {style:{fontFamily:”‘DM Mono’,monospace”,fontSize:“13px”,fontWeight:“600”,color:color,background:color+“22”,padding:“4px 12px”,borderRadius:“20px”,transition:“all 0.3s”}},
-metric.levels[val])
-));
-
-var trackWrap = el(“div”, {style:{position:“relative”,height:“36px”,display:“flex”,alignItems:“center”}},
-el(“div”, {style:{position:“absolute”,left:0,right:0,height:“4px”,background:“rgba(255,255,255,0.1)”,borderRadius:“4px”}}),
-el(“div”, {style:{position:“absolute”,left:0,width:pct+”%”,height:“4px”,background:color,borderRadius:“4px”,transition:“width 0.2s,background 0.3s”}})
-);
-
-var inp = document.createElement(“input”);
-inp.type = “range”; inp.min = “0”; inp.max = String(max); inp.value = String(val);
-Object.assign(inp.style, {position:“absolute”,width:“100%”,height:“100%”,opacity:“0”,cursor:“pointer”,zIndex:“2”});
-inp.addEventListener(“input”, (function(id){ return function(e){ state.values[id] = Number(e.target.value); render(); }; })(metric.id));
-trackWrap.appendChild(inp);
-
-var dotsRow = el(“div”, {style:{position:“absolute”,left:0,right:0,display:“flex”,justifyContent:“space-between”,top:“14px”}});
-metric.levels.forEach(function(_, i) {
-var active = i === val;
-dotsRow.appendChild(el(“div”, {style:{display:“flex”,flexDirection:“column”,alignItems:“center”}},
-el(“div”, {style:{
-width:active?“14px”:“8px”, height:active?“14px”:“8px”, borderRadius:“50%”,
-background: i<=val ? color : “rgba(255,255,255,0.15)”,
-transition:“all 0.2s”, marginTop:active?”-5px”:”-2px”,
-boxShadow: active ? “0 0 8px “+color+“88” : “none”
-}})
-));
-});
-trackWrap.appendChild(dotsRow);
-card.appendChild(trackWrap);
-
-var labelsRow = el(“div”, {style:{display:“flex”,justifyContent:“space-between”,marginTop:“8px”}});
-metric.levels.forEach(function(l, i) {
-labelsRow.appendChild(el(“span”, {style:{fontSize:“10px”,color:i===val?color:“rgba(255,255,255,0.3)”,fontFamily:”‘DM Mono’,monospace”,transition:“color 0.3s”,textAlign:“center”,flex:“1”}}, l));
-});
-card.appendChild(labelsRow);
-return card;
-}
-
-function makeTextarea(opts) {
-var ta = document.createElement(“textarea”);
-ta.rows = opts.rows || 2;
-ta.placeholder = opts.placeholder || “”;
-ta.value = opts.value || “”;
-Object.assign(ta.style, {
-background: opts.bg || “rgba(255,255,255,0.04)”,
-border: “1px solid “ + (opts.border || “rgba(255,255,255,0.08)”),
-color: opts.color || “#e2e8f0”
-});
-ta.addEventListener(“input”, (function(field){ return function(e){ state.values[field] = e.target.value; }; })(opts.field));
-return ta;
+  if (state.tab === "survey") {
+    root.appendChild(Survey());
+  } else {
+    root.appendChild(History());
+  }
 }
 
 function Survey() {
-var wrap = el(“div”, {});
+  const container = el("div");
 
-var dateInput = document.createElement(“input”);
-dateInput.type = “date”; dateInput.value = state.values.date;
-dateInput.addEventListener(“change”, function(e){ state.values.date = e.target.value; });
-wrap.appendChild(el(“div”, {style:{marginBottom:“20px”,display:“flex”,alignItems:“center”,gap:“12px”}},
-el(“span”, {style:{fontSize:“18px”}}, “\uD83D\uDCC6”),
-el(“div”, {style:{flex:“1”}},
-el(“div”, {className:“field-label”}, “SESSION DATE”),
-dateInput
-)
-));
-
-METRICS.forEach(function(m){ wrap.appendChild(Slider(m)); });
-
-wrap.appendChild(el(“div”, {style:{marginBottom:“16px”}},
-el(“div”, {className:“field-label”}, “\uD83C\uDF77 DRINKS LOG \u2014 what & how much”),
-makeTextarea({rows:3, placeholder:“e.g. 3 pints of lager, 2 glasses of wine, 1 whisky…”, value:state.values.drinks, field:“drinks”, bg:“rgba(99,102,241,0.07)”, border:“rgba(99,102,241,0.2)”, color:”#c4b5fd”})
-));
-
-wrap.appendChild(el(“div”, {style:{marginBottom:“16px”}},
-el(“div”, {className:“field-label”}, “\uD83D\uDE33 EMBARRASSING INCIDENTS (optional)”),
-makeTextarea({rows:2, placeholder:“What happened…”, value:state.values.incidents, field:“incidents”, bg:“rgba(239,68,68,0.06)”, border:“rgba(239,68,68,0.15)”, color:”#fca5a5”})
-));
-
-wrap.appendChild(el(“div”, {style:{marginBottom:“24px”}},
-el(“div”, {className:“field-label”}, “\uD83D\uDCDD GENERAL NOTE (optional)”),
-makeTextarea({rows:2, placeholder:“Any other thoughts…”, value:state.values.note, field:“note”})
-));
-
-wrap.appendChild(el(“button”, {
-className:“save-btn”,
-style:{
-background: state.saved ? “linear-gradient(135deg,#22c55e,#16a34a)” : “linear-gradient(135deg,#6366f1,#8b5cf6)”,
-boxShadow: state.saved ? “0 4px 20px rgba(34,197,94,0.3)” : “0 4px 20px rgba(99,102,241,0.3)”
-},
-onClick: handleSave
-}, state.saved ? “\u2713 Saved!” : “Save Session”));
-
-return wrap;
-}
-
-function handleSave() {
-var entry = Object.assign({}, state.values, {id: Date.now()});
-saveHistory([entry].concat(state.history));
-setState({saved:true, values:defaultValues()});
-setTimeout(function(){ setState({saved:false, tab:“history”}); }, 1200);
-}
-
-function HistoryCard(entry) {
-var isExpanded = state.expandedId === entry.id;
-var date = new Date(entry.date + “T12:00:00”);
-var dayName = date.toLocaleDateString(“en-GB”, {weekday:“short”});
-var dateStr = date.toLocaleDateString(“en-GB”, {day:“numeric”, month:“short”, year:“numeric”});
-
-var card = el(“div”, {className:“history-card”});
-
-var dotEls = METRICS.map(function(m) {
-var c = m.colors[entry[m.id] || 0];
-return el(“div”, {className:“dot”, style:{background:c, boxShadow:“0 0 6px “+c+“66”}});
-});
-
-card.appendChild(el(“button”, {
-className:“history-header”,
-onClick: (function(id){ return function(){ setState({expandedId: isExpanded ? null : id}); }; })(entry.id)
-},
-el(“div”, {style:{textAlign:“left”}},
-el(“div”, {style:{fontFamily:”‘DM Mono’,monospace”,fontSize:“11px”,color:“rgba(255,255,255,0.4)”}}, dayName),
-el(“div”, {style:{fontFamily:”‘Playfair Display’,serif”,fontSize:“14px”,color:”#e2e8f0”}}, dateStr)
-),
-el(“div”, {style:{display:“flex”,gap:“6px”,alignItems:“center”}},
-dotEls,
-el(“span”, {style:{color:“rgba(255,255,255,0.3)”,marginLeft:“6px”,fontSize:“12px”}}, isExpanded ? “\u25B2” : “\u25BC”)
-)
-));
-
-if (isExpanded) {
-var body = el(“div”, {className:“history-body”});
-
-```
-var grid = el("div", {style:{paddingTop:"12px",display:"grid",gridTemplateColumns:"1fr 1fr",gap:"8px",marginBottom:"10px"}});
-METRICS.forEach(function(m) {
-  var color = m.colors[entry[m.id] || 0];
-  grid.appendChild(el("div", {style:{display:"flex",alignItems:"center",gap:"8px"}},
-    el("span", {style:{fontSize:"14px"}}, m.emoji),
-    el("div", {},
-      el("div", {style:{fontSize:"10px",color:"rgba(255,255,255,0.35)",fontFamily:"'DM Mono',monospace"}}, m.label),
-      el("div", {style:{fontSize:"13px",color:color,fontFamily:"'DM Mono',monospace",fontWeight:"600"}}, m.levels[entry[m.id] || 0])
-    )
+  // Date
+  container.appendChild(el("div", {style:{marginBottom:"20px"}},
+    el("div", {className:"field-label"}, "Session Date"),
+    el("input", {type:"date", value:state.values.date, onchange: e => state.values.date = e.target.value})
   ));
-});
-body.appendChild(grid);
 
-if (entry.drinks) {
-  body.appendChild(el("div", {style:{background:"rgba(99,102,241,0.1)",borderLeft:"2px solid #6366f1",borderRadius:"0 8px 8px 0",padding:"8px 12px",marginBottom:"8px"}},
-    el("div", {style:{fontSize:"10px",color:"#818cf8",fontFamily:"'DM Mono',monospace",marginBottom:"3px"}}, "\uD83C\uDF77 DRINKS LOG"),
-    el("div", {style:{fontSize:"13px",color:"#c4b5fd",lineHeight:"1.5",whiteSpace:"pre-wrap"}}, entry.drinks)
-  ));
-}
-if (entry.incidents) {
-  body.appendChild(el("div", {style:{background:"rgba(239,68,68,0.1)",borderLeft:"2px solid #ef4444",borderRadius:"0 8px 8px 0",padding:"8px 12px",marginBottom:"8px"}},
-    el("div", {style:{fontSize:"10px",color:"#ef4444",fontFamily:"'DM Mono',monospace",marginBottom:"3px"}}, "\uD83D\uDE33 INCIDENTS"),
-    el("div", {style:{fontSize:"13px",color:"#fca5a5",lineHeight:"1.5"}}, entry.incidents)
-  ));
-}
-if (entry.note) {
-  body.appendChild(el("div", {style:{background:"rgba(255,255,255,0.05)",borderRadius:"8px",padding:"8px 12px",marginBottom:"8px"}},
-    el("div", {style:{fontSize:"10px",color:"rgba(255,255,255,0.3)",fontFamily:"'DM Mono',monospace",marginBottom:"3px"}}, "\uD83D\uDCDD NOTE"),
-    el("div", {style:{fontSize:"13px",color:"rgba(255,255,255,0.7)",lineHeight:"1.5"}}, entry.note)
-  ));
-}
+  // Metrics
+  METRICS.forEach(m => {
+    const val = state.values[m.id];
+    const color = m.colors[val];
+    const card = el("div", {className:"metric-card", style:{borderLeft:`4px solid ${color}`}},
+      el("div", {style:{display:"flex", justifyContent:"space-between", marginBottom:"15px"}},
+        el("span", {}, `${m.emoji} ${m.label}`),
+        el("span", {style:{color:color, fontWeight:"bold"}}, m.levels[val])
+      ),
+      el("input", {
+        type:"range", min:0, max:3, value:val, 
+        style:{width:"100%", accentColor:color},
+        oninput: e => { state.values[m.id] = parseInt(e.target.value); render(); }
+      })
+    );
+    container.appendChild(card);
+  });
 
-body.appendChild(el("button", {
-  className:"delete-btn",
-  onClick: (function(id){ return function(){ saveHistory(state.history.filter(function(e){ return e.id !== id; })); setState({expandedId:null}); }; })(entry.id)
-}, "Delete entry"));
+  // Text areas
+  const fields = [
+    {id:"drinks", label:"🍷 Drinks Log", placeholder:"What did you have?"},
+    {id:"incidents", label:"😳 Incidents", placeholder:"Anything regrettable?"}
+  ];
+  
+  fields.forEach(f => {
+    container.appendChild(el("div", {style:{marginBottom:"16px"}},
+      el("div", {className:"field-label"}, f.label),
+      el("textarea", {
+        placeholder: f.placeholder, 
+        value: state.values[f.id],
+        oninput: e => state.values[f.id] = e.target.value
+      })
+    ));
+  });
 
-card.appendChild(body);
-```
+  // Save Button
+  container.appendChild(el("button", {
+    className: "save-btn",
+    style: { background: state.saved ? "#22c55e" : "linear-gradient(135deg,#6366f1,#8b5cf6)" },
+    onclick: () => {
+      const entry = {...state.values, id: Date.now()};
+      const newHistory = [entry, ...state.history];
+      localStorage.setItem("drinking_diary_v2", JSON.stringify(newHistory));
+      setState({history: newHistory, saved: true, values: defaultValues()});
+      setTimeout(() => setState({saved: false, tab: "history"}), 1000);
+    }
+  }, state.saved ? "✓ Saved!" : "Save Session"));
 
-}
-return card;
+  return container;
 }
 
 function History() {
-var wrap = el(“div”, {});
-if (state.history.length === 0) {
-wrap.appendChild(el(“div”, {style:{textAlign:“center”,padding:“60px 0”}},
-el(“div”, {style:{fontSize:“40px”,marginBottom:“12px”}}, “\uD83D\uDDD2\uFE0F”),
-el(“div”, {style:{fontFamily:”‘Playfair Display’,serif”,color:“rgba(255,255,255,0.4)”,fontSize:“16px”}}, “No entries yet”),
-el(“div”, {style:{fontFamily:”‘DM Mono’,monospace”,color:“rgba(255,255,255,0.2)”,fontSize:“12px”,marginTop:“6px”}}, “Log your first session”)
-));
-} else {
-wrap.appendChild(el(“div”, {style:{fontFamily:”‘DM Mono’,monospace”,fontSize:“11px”,color:“rgba(255,255,255,0.3)”,marginBottom:“12px”}},
-state.history.length + “ session” + (state.history.length !== 1 ? “s” : “”) + “ recorded \u2014 tap to expand”
-));
-state.history.forEach(function(entry){ wrap.appendChild(HistoryCard(entry)); });
-}
-return wrap;
-}
-
-function render() {
-var app = document.getElementById(“app”);
-app.innerHTML = “”;
-app.appendChild(Header());
-app.appendChild(Tabs());
-app.appendChild(state.tab === “survey” ? Survey() : History());
+  if (state.history.length === 0) return el("div", {style:{textAlign:"center", padding:"40px"}}, "No logs yet.");
+  
+  const container = el("div");
+  state.history.forEach(entry => {
+    const isExpanded = state.expandedId === entry.id;
+    const card = el("div", {className:"history-card"},
+      el("button", {className:"history-header", onclick: () => setState({expandedId: isExpanded ? null : entry.id})},
+        el("div", {style:{textAlign:"left"}}, 
+           el("div", {style:{fontSize:"14px"}}, entry.date)
+        ),
+        el("div", {style:{display:"flex", gap:"4px"}}, 
+          METRICS.map(m => el("div", {className:"dot", style:{background:m.colors[entry[m.id]]}}))
+        )
+      )
+    );
+    if (isExpanded) {
+        const detail = el("div", {style:{padding:"15px", borderTop:"1px solid rgba(255,255,255,0.1)", fontSize:"14px"}},
+            el("div", {style:{marginBottom:"10px", color:"#c4b5fd"}}, entry.drinks || "No drink log"),
+            el("button", {
+                style:{color:"#f87171", background:"none", border:"none", fontSize:"12px"},
+                onclick: () => {
+                    const filtered = state.history.filter(h => h.id !== entry.id);
+                    localStorage.setItem("drinking_diary_v2", JSON.stringify(filtered));
+                    setState({history: filtered});
+                }
+            }, "Delete Entry")
+        );
+        card.appendChild(detail);
+    }
+    container.appendChild(card);
+  });
+  return container;
 }
 
 render();
 </script>
-
 </body>
 </html>
+
